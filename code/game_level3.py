@@ -64,8 +64,9 @@ class Game:
         self.last_flash_time = 0
 
         icon_raw = pygame.image.load("../graphics/level_3/gravity.png").convert_alpha()
-        self.gravity_icon = pygame.transform.scale(icon_raw, (120, 120))
-        self.gravity_icon_rect = self.gravity_icon.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
+        icon_raw = pygame.transform.flip(icon_raw, False, True)
+        self.gravity_icon = pygame.transform.scale(icon_raw, (80, 80))
+        self.gravity_icon_rect = self.gravity_icon.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 4))
 
     def trigger_screen_effects(self):
         self.flash_time = time.time()
