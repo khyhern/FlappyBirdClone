@@ -138,6 +138,8 @@ def play():
 
 # --- Main menu screen ---
 def main_menu():
+    pygame.display.set_caption("Menu")
+
     while True:
         screen.blit(bg, bg_rect.topleft)
         mouse_pos = pygame.mouse.get_pos()

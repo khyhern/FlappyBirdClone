@@ -4,12 +4,15 @@ import time
 from random import randint
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FRAMERATE
 from sprites import BG, Ground, Plane, Obstacle
+from button import Button
+from main import main_menu  # Make sure this doesn’t cause circular import issues
+
 
 class Game:
     def __init__(self):
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        pygame.display.set_caption("Flappy Bird - Level 3")
+        pygame.display.set_caption("Level 3")
         self.clock = pygame.time.Clock()
         self.active = True
 
@@ -36,6 +39,16 @@ class Game:
         # UI Menu
         self.menu_surf = pygame.image.load("../graphics/ui/menu.png").convert_alpha()
         self.menu_rect = self.menu_surf.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
+
+        # Main Menu Button
+        self.main_menu_button = Button(
+            None,
+            (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 + 160),
+            "MAIN MENU",
+            self.font,
+            "white",
+            "red"
+        )
 
         # Music
         self.music = pygame.mixer.Sound("../sounds/music.wav")
@@ -140,6 +153,8 @@ class Game:
             dt = time.time() - last_time
             last_time = time.time()
 
+            mouse_pos = pygame.mouse.get_pos()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -149,7 +164,10 @@ class Game:
                     if self.active:
                         self.plane.jump()
                     else:
-                        self.reset_game()
+                        if self.main_menu_button.check_for_input(mouse_pos):
+                            main_menu()
+                        else:
+                            self.reset_game()
 
                 elif event.type == self.obstacle_timer and self.active:
                     Obstacle(self.all_sprites, self.collision_sprites, scale_factor=self.scale_factor * 1.1)
@@ -174,7 +192,10 @@ class Game:
                 elif self.gravity_flipped:
                     self.display_surface.blit(self.gravity_icon, self.gravity_icon_rect)
             else:
+                # Death menu
                 self.display_surface.blit(self.menu_surf, self.menu_rect)
+                self.main_menu_button.change_color(mouse_pos)
+                self.main_menu_button.update(self.display_surface)
 
             self.display_score()
             self.apply_effects()
