@@ -1,9 +1,9 @@
 import pygame
 import sys
 import time
+from random import randint
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FRAMERATE
 from sprites import BG, Ground, Plane, Obstacle
-from random import randint
 
 class Game:
     def __init__(self):
@@ -17,10 +17,9 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
 
-        # Background and scaling
+        # Background setup
         bg_height = pygame.image.load("../graphics/environment/background.png").get_height()
         self.scale_factor = WINDOW_HEIGHT / bg_height
-
         BG(self.all_sprites, scale_factor=self.scale_factor)
         Ground(self.all_sprites, self.collision_sprites, scale_factor=self.scale_factor)
         self.plane = Plane(self.all_sprites, scale_factor=self.scale_factor / 1.7)
@@ -88,12 +87,10 @@ class Game:
             self.gravity_flipped = not self.gravity_flipped
             self.plane.flip_gravity(self.gravity_flipped)
 
-            # Reset warning state
             self.gravity_warning_active = False
             self.gravity_icon_visible = True
             self.last_flash_time = time.time()
 
-            # Schedule next flip
             self.next_gravity_flip_distance = self.distance_traveled + randint(
                 self.gravity_interval_min, self.gravity_interval_max
             )
@@ -111,6 +108,7 @@ class Game:
             for sprite in self.collision_sprites:
                 if getattr(sprite, 'sprite_type', '') == 'obstacle':
                     sprite.kill()
+
             self.active = False
             self.plane.kill()
             self.trigger_screen_effects()
@@ -118,10 +116,21 @@ class Game:
     def display_score(self):
         y = WINDOW_HEIGHT / 10 if self.active else WINDOW_HEIGHT / 2 + self.menu_rect.height / 1.5
         self.score = (pygame.time.get_ticks() - self.start_offset) // 1000 if self.active else self.score
-
         score_surf = self.font.render(str(self.score), True, "black")
         score_rect = score_surf.get_rect(midtop=(WINDOW_WIDTH / 2, y))
         self.display_surface.blit(score_surf, score_rect)
+
+    def reset_game(self):
+        self.plane = Plane(self.all_sprites, scale_factor=self.scale_factor / 1.7)
+        self.active = True
+        self.start_offset = pygame.time.get_ticks()
+        self.gravity_flipped = False
+        self.gravity_warning_active = False
+        self.gravity_icon_visible = True
+        self.distance_traveled = 0
+        self.next_gravity_flip_distance = randint(
+            self.gravity_interval_min, self.gravity_interval_max
+        )
 
     def run(self):
         last_time = time.time()
@@ -139,21 +148,11 @@ class Game:
                     if self.active:
                         self.plane.jump()
                     else:
-                        self.plane = Plane(self.all_sprites, scale_factor=self.scale_factor / 1.7)
-                        self.active = True
-                        self.start_offset = pygame.time.get_ticks()
-                        self.gravity_flipped = False
-                        self.gravity_warning_active = False
-                        self.gravity_icon_visible = True
-                        self.distance_traveled = 0
-                        self.next_gravity_flip_distance = randint(
-                            self.gravity_interval_min, self.gravity_interval_max
-                        )
+                        self.reset_game()
 
                 elif event.type == self.obstacle_timer and self.active:
                     Obstacle(self.all_sprites, self.collision_sprites, scale_factor=self.scale_factor * 1.1)
 
-            # Game logic
             self.display_surface.fill("black")
             self.all_sprites.update(dt)
             self.all_sprites.draw(self.display_surface)
@@ -163,7 +162,7 @@ class Game:
                 self.check_gravity_zone()
                 self.collisions()
 
-                # Gravity Icon UI
+                # Gravity warning UI
                 if self.gravity_warning_active:
                     now = time.time()
                     if now - self.last_flash_time >= self.gravity_icon_flash_interval:
@@ -173,7 +172,6 @@ class Game:
                         self.display_surface.blit(self.gravity_icon, self.gravity_icon_rect)
                 elif self.gravity_flipped:
                     self.display_surface.blit(self.gravity_icon, self.gravity_icon_rect)
-
             else:
                 self.display_surface.blit(self.menu_surf, self.menu_rect)
 

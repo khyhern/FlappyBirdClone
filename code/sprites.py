@@ -1,20 +1,13 @@
 import pygame
-from settings import WINDOW_HEIGHT, WINDOW_WIDTH
+from settings import (
+    WINDOW_HEIGHT, WINDOW_WIDTH,
+    BG_SCROLL_SPEED, GROUND_SCROLL_SPEED, OBSTACLE_SCROLL_SPEED,
+    JUMP_FORCE, GRAVITY, PLANE_ANIM_SPEED,
+    PLANE_IMG_PATH, BG_IMG_PATH, GROUND_IMG_PATH, OBSTACLE_IMG_PATH,
+    JUMP_SOUND_PATH
+)
 from random import choice, randint
 
-# --- Constants ---
-BG_SCROLL_SPEED = 300
-GROUND_SCROLL_SPEED = 360
-OBSTACLE_SCROLL_SPEED = 400
-JUMP_FORCE = -400
-GRAVITY = 555
-PLANE_ANIM_SPEED = 10
-
-PLANE_IMG_PATH = '../graphics/plane/red{}.png'
-BG_IMG_PATH = '../graphics/environment/background.png'
-GROUND_IMG_PATH = '../graphics/environment/ground.png'
-OBSTACLE_IMG_PATH = '../graphics/obstacles/{}.png'
-JUMP_SOUND_PATH = '../sounds/jump.wav'
 
 class BG(pygame.sprite.Sprite):
     def __init__(self, *groups, scale_factor):
@@ -80,16 +73,16 @@ class Plane(pygame.sprite.Sprite):
         self.jump_sound = pygame.mixer.Sound(JUMP_SOUND_PATH)
         self.jump_sound.set_volume(0.3)
 
-        self.flip_gravity(False)  # ✅ Ensure gravity is initialized
+        self.flip_gravity(False)
 
     def import_frames(self, scale_factor):
         for i in range(3):
             surf = pygame.image.load(PLANE_IMG_PATH.format(i)).convert_alpha()
-            scaled_surf = pygame.transform.scale(
+            scaled = pygame.transform.scale(
                 surf,
                 pygame.math.Vector2(surf.get_size()) * scale_factor
             )
-            self.frames.append(scaled_surf)
+            self.frames.append(scaled)
 
     def apply_gravity(self, dt):
         self.direction += self.gravity * dt
@@ -102,8 +95,7 @@ class Plane(pygame.sprite.Sprite):
 
     def animate(self, dt):
         self.frame_index += PLANE_ANIM_SPEED * dt
-        if self.frame_index >= len(self.frames):
-            self.frame_index = 0
+        self.frame_index %= len(self.frames)
         self.image = self.frames[int(self.frame_index)]
 
     def rotate(self):
@@ -120,7 +112,6 @@ class Plane(pygame.sprite.Sprite):
         self.rotate()
 
 
-
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, *groups, scale_factor):
         super().__init__(*groups)
@@ -129,6 +120,9 @@ class Obstacle(pygame.sprite.Sprite):
         orientation = choice(('up', 'down'))
         sprite_index = choice((0, 1))
         surf = pygame.image.load(OBSTACLE_IMG_PATH.format(sprite_index)).convert_alpha()
+
+        if orientation == 'down':
+            surf = pygame.transform.flip(surf, False, True)
 
         self.image = pygame.transform.scale(
             surf,
@@ -141,7 +135,6 @@ class Obstacle(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(midbottom=(x, y))
         else:
             y = randint(-50, -10)
-            self.image = pygame.transform.flip(self.image, False, True)
             self.rect = self.image.get_rect(midtop=(x, y))
 
         self.pos = pygame.math.Vector2(self.rect.topleft)
