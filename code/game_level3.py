@@ -3,11 +3,10 @@ import sys
 import time
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FRAMERATE
 from sprites import BG, Ground, Plane, Obstacle
-
+from random import randint
 
 class Game:
     def __init__(self):
-        # Initialize Pygame
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Flappy Bird - Level 3")
@@ -18,60 +17,91 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
 
-        # Calculate scale factor based on background image
+        # Background and scaling
         bg_height = pygame.image.load("../graphics/environment/background.png").get_height()
         self.scale_factor = WINDOW_HEIGHT / bg_height
 
-        # Create game sprites
         BG(self.all_sprites, scale_factor=self.scale_factor)
         Ground(self.all_sprites, self.collision_sprites, scale_factor=self.scale_factor)
         self.plane = Plane(self.all_sprites, scale_factor=self.scale_factor / 1.7)
 
-        # Obstacle spawn timer
+        # Obstacles
         self.obstacle_timer = pygame.USEREVENT + 1
         pygame.time.set_timer(self.obstacle_timer, 1400)
 
-        # Font and score
+        # Score
         self.font = pygame.font.Font("../graphics/font/BD_Cartoon_Shout.ttf", 30)
         self.score = 0
         self.start_offset = 0
 
-        # Game over UI
+        # UI Menu
         self.menu_surf = pygame.image.load("../graphics/ui/menu.png").convert_alpha()
         self.menu_rect = self.menu_surf.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
 
-        # Background music
+        # Music
         self.music = pygame.mixer.Sound("../sounds/music.wav")
         self.music.play(loops=-1)
 
-        # Flash + Shake Effect
+        # Effects
         self.flash_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.flash_surface.fill((255, 0, 0))
         self.flash_surface.set_alpha(0)
-
         self.flash_duration = 0.2
         self.flash_time = 0
-
         self.shake_duration = 0.3
         self.shake_time = 0
         self.shake_magnitude = 10
+
+        # Gravity Flip
+        self.distance_traveled = 0
+        self.gravity_flipped = False
+        self.gravity_interval_min = 2000
+        self.gravity_interval_max = 3500
+        self.gravity_warning_distance = 800
+        self.next_gravity_flip_distance = randint(self.gravity_interval_min, self.gravity_interval_max)
+        self.gravity_warning_active = False
+        self.gravity_icon_visible = True
+        self.gravity_icon_flash_interval = 0.3
+        self.last_flash_time = 0
+
+        icon_raw = pygame.image.load("../graphics/level_3/gravity.png").convert_alpha()
+        self.gravity_icon = pygame.transform.scale(icon_raw, (120, 120))
+        self.gravity_icon_rect = self.gravity_icon.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
 
     def trigger_screen_effects(self):
         self.flash_time = time.time()
         self.shake_time = time.time()
 
     def apply_effects(self):
-        # Screen Shake
-        offset_x, offset_y = 0, 0
-        if time.time() - self.shake_time < self.shake_duration:
-            offset_x = int((self.shake_magnitude * 2) * (0.5 - time.time() % 0.1))
-            offset_y = int((self.shake_magnitude * 2) * (0.5 - time.time() % 0.1))
+        now = time.time()
+        if now - self.shake_time < self.shake_duration:
+            offset_x = int((self.shake_magnitude * 2) * (0.5 - now % 0.1))
+            offset_y = int((self.shake_magnitude * 2) * (0.5 - now % 0.1))
             self.display_surface.scroll(offset_x, offset_y)
 
-        # Flash
-        if time.time() - self.flash_time < self.flash_duration:
+        if now - self.flash_time < self.flash_duration:
             self.flash_surface.set_alpha(150)
             self.display_surface.blit(self.flash_surface, (0, 0))
+
+    def check_gravity_zone(self):
+        if self.distance_traveled >= self.next_gravity_flip_distance:
+            self.gravity_flipped = not self.gravity_flipped
+            self.plane.flip_gravity(self.gravity_flipped)
+
+            # Reset warning state
+            self.gravity_warning_active = False
+            self.gravity_icon_visible = True
+            self.last_flash_time = time.time()
+
+            # Schedule next flip
+            self.next_gravity_flip_distance = self.distance_traveled + randint(
+                self.gravity_interval_min, self.gravity_interval_max
+            )
+
+        elif self.distance_traveled >= self.next_gravity_flip_distance - self.gravity_warning_distance:
+            self.gravity_warning_active = True
+        else:
+            self.gravity_warning_active = False
 
     def collisions(self):
         collided = pygame.sprite.spritecollide(
@@ -86,11 +116,8 @@ class Game:
             self.trigger_screen_effects()
 
     def display_score(self):
-        if self.active:
-            self.score = (pygame.time.get_ticks() - self.start_offset) // 1000
-            y = WINDOW_HEIGHT / 10
-        else:
-            y = WINDOW_HEIGHT / 2 + self.menu_rect.height / 1.5
+        y = WINDOW_HEIGHT / 10 if self.active else WINDOW_HEIGHT / 2 + self.menu_rect.height / 1.5
+        self.score = (pygame.time.get_ticks() - self.start_offset) // 1000 if self.active else self.score
 
         score_surf = self.font.render(str(self.score), True, "black")
         score_rect = score_surf.get_rect(midtop=(WINDOW_WIDTH / 2, y))
@@ -100,11 +127,9 @@ class Game:
         last_time = time.time()
 
         while True:
-            # Delta time
             dt = time.time() - last_time
             last_time = time.time()
 
-            # Event handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -114,10 +139,16 @@ class Game:
                     if self.active:
                         self.plane.jump()
                     else:
-                        # Restart game
                         self.plane = Plane(self.all_sprites, scale_factor=self.scale_factor / 1.7)
                         self.active = True
                         self.start_offset = pygame.time.get_ticks()
+                        self.gravity_flipped = False
+                        self.gravity_warning_active = False
+                        self.gravity_icon_visible = True
+                        self.distance_traveled = 0
+                        self.next_gravity_flip_distance = randint(
+                            self.gravity_interval_min, self.gravity_interval_max
+                        )
 
                 elif event.type == self.obstacle_timer and self.active:
                     Obstacle(self.all_sprites, self.collision_sprites, scale_factor=self.scale_factor * 1.1)
@@ -126,17 +157,27 @@ class Game:
             self.display_surface.fill("black")
             self.all_sprites.update(dt)
             self.all_sprites.draw(self.display_surface)
-            self.display_score()
 
-            # Check collisions or show menu
             if self.active:
+                self.distance_traveled += 400 * dt
+                self.check_gravity_zone()
                 self.collisions()
+
+                # Gravity Icon UI
+                if self.gravity_warning_active:
+                    now = time.time()
+                    if now - self.last_flash_time >= self.gravity_icon_flash_interval:
+                        self.gravity_icon_visible = not self.gravity_icon_visible
+                        self.last_flash_time = now
+                    if self.gravity_icon_visible:
+                        self.display_surface.blit(self.gravity_icon, self.gravity_icon_rect)
+                elif self.gravity_flipped:
+                    self.display_surface.blit(self.gravity_icon, self.gravity_icon_rect)
+
             else:
                 self.display_surface.blit(self.menu_surf, self.menu_rect)
 
-            # Apply screen effects
+            self.display_score()
             self.apply_effects()
-
-            # Final screen update
             pygame.display.update()
             self.clock.tick(FRAMERATE)

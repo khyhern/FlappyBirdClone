@@ -7,7 +7,7 @@ BG_SCROLL_SPEED = 300
 GROUND_SCROLL_SPEED = 360
 OBSTACLE_SCROLL_SPEED = 400
 JUMP_FORCE = -400
-GRAVITY = 600
+GRAVITY = 555
 PLANE_ANIM_SPEED = 10
 
 PLANE_IMG_PATH = '../graphics/plane/red{}.png'
@@ -74,12 +74,13 @@ class Plane(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect(midleft=(WINDOW_WIDTH / 20, WINDOW_HEIGHT / 2))
         self.pos = pygame.math.Vector2(self.rect.topleft)
-        self.gravity = GRAVITY
         self.direction = 0
         self.mask = pygame.mask.from_surface(self.image)
 
         self.jump_sound = pygame.mixer.Sound(JUMP_SOUND_PATH)
         self.jump_sound.set_volume(0.3)
+
+        self.flip_gravity(False)  # ✅ Ensure gravity is initialized
 
     def import_frames(self, scale_factor):
         for i in range(3):
@@ -97,7 +98,7 @@ class Plane(pygame.sprite.Sprite):
 
     def jump(self):
         self.jump_sound.play()
-        self.direction = JUMP_FORCE
+        self.direction = JUMP_FORCE if self.gravity > 0 else -JUMP_FORCE
 
     def animate(self, dt):
         self.frame_index += PLANE_ANIM_SPEED * dt
@@ -110,10 +111,14 @@ class Plane(pygame.sprite.Sprite):
         self.image = rotated
         self.mask = pygame.mask.from_surface(self.image)
 
+    def flip_gravity(self, is_flipped):
+        self.gravity = -GRAVITY if is_flipped else GRAVITY
+
     def update(self, dt):
         self.apply_gravity(dt)
         self.animate(dt)
         self.rotate()
+
 
 
 class Obstacle(pygame.sprite.Sprite):
