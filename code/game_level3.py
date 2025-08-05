@@ -44,8 +44,36 @@ class Game:
         self.music = pygame.mixer.Sound("../sounds/music.wav")
         self.music.play(loops=-1)
 
+        # Flash + Shake Effect
+        self.flash_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.flash_surface.fill((255, 0, 0))
+        self.flash_surface.set_alpha(0)
+
+        self.flash_duration = 0.2
+        self.flash_time = 0
+
+        self.shake_duration = 0.3
+        self.shake_time = 0
+        self.shake_magnitude = 10
+
+    def trigger_screen_effects(self):
+        self.flash_time = time.time()
+        self.shake_time = time.time()
+
+    def apply_effects(self):
+        # Screen Shake
+        offset_x, offset_y = 0, 0
+        if time.time() - self.shake_time < self.shake_duration:
+            offset_x = int((self.shake_magnitude * 2) * (0.5 - time.time() % 0.1))
+            offset_y = int((self.shake_magnitude * 2) * (0.5 - time.time() % 0.1))
+            self.display_surface.scroll(offset_x, offset_y)
+
+        # Flash
+        if time.time() - self.flash_time < self.flash_duration:
+            self.flash_surface.set_alpha(150)
+            self.display_surface.blit(self.flash_surface, (0, 0))
+
     def collisions(self):
-        # Check for collision or going above screen
         collided = pygame.sprite.spritecollide(
             self.plane, self.collision_sprites, False, pygame.sprite.collide_mask
         )
@@ -55,16 +83,15 @@ class Game:
                     sprite.kill()
             self.active = False
             self.plane.kill()
+            self.trigger_screen_effects()
 
     def display_score(self):
-        # Update score position based on game state
         if self.active:
             self.score = (pygame.time.get_ticks() - self.start_offset) // 1000
             y = WINDOW_HEIGHT / 10
         else:
             y = WINDOW_HEIGHT / 2 + self.menu_rect.height / 1.5
 
-        # Render and blit score
         score_surf = self.font.render(str(self.score), True, "black")
         score_rect = score_surf.get_rect(midtop=(WINDOW_WIDTH / 2, y))
         self.display_surface.blit(score_surf, score_rect)
@@ -73,7 +100,7 @@ class Game:
         last_time = time.time()
 
         while True:
-            # Calculate delta time
+            # Delta time
             dt = time.time() - last_time
             last_time = time.time()
 
@@ -107,6 +134,9 @@ class Game:
             else:
                 self.display_surface.blit(self.menu_surf, self.menu_rect)
 
-            # Update screen
+            # Apply screen effects
+            self.apply_effects()
+
+            # Final screen update
             pygame.display.update()
             self.clock.tick(FRAMERATE)
