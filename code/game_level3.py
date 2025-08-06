@@ -34,7 +34,7 @@ class Game:
         # Score
         self.font = pygame.font.Font("../graphics/font/BD_Cartoon_Shout.ttf", 30)
         self.score = 0
-        self.start_offset = 0
+        self.time_elapsed = 0  # <-- Timer in seconds
 
         # UI Menu
         self.menu_surf = pygame.image.load("../graphics/ui/menu.png").convert_alpha()
@@ -129,15 +129,15 @@ class Game:
 
     def display_score(self):
         y = WINDOW_HEIGHT / 10 if self.active else WINDOW_HEIGHT / 2 + self.menu_rect.height / 1.5
-        self.score = (pygame.time.get_ticks() - self.start_offset) // 1000 if self.active else self.score
-        score_surf = self.font.render(str(self.score), True, "black")
+        score_value = int(self.time_elapsed)
+        score_surf = self.font.render(str(score_value), True, "black")
         score_rect = score_surf.get_rect(midtop=(WINDOW_WIDTH / 2, y))
         self.display_surface.blit(score_surf, score_rect)
 
     def reset_game(self):
         self.plane = Plane(self.all_sprites, scale_factor=self.scale_factor / 1.7)
         self.active = True
-        self.start_offset = pygame.time.get_ticks()
+        self.time_elapsed = 0
         self.gravity_flipped = False
         self.gravity_warning_active = False
         self.gravity_icon_visible = True
@@ -178,6 +178,7 @@ class Game:
             self.all_sprites.draw(self.display_surface)
 
             if self.active:
+                self.time_elapsed += dt  # <-- Timer only increases during gameplay
                 self.distance_traveled += 400 * dt
                 self.check_gravity_zone()
                 self.collisions()
