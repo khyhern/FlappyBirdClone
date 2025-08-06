@@ -11,7 +11,7 @@ GRAVITY = 555
 PLANE_ANIM_SPEED = 10
 
 # Asset paths
-PLANE_IMG_PATH = '../graphics/plane/red{}.png'
+PLANE_IMG_PATH = '../graphics/plane/yellow{}.png'
 BG_IMG_PATH = '../graphics/environment/background.png'
 GROUND_IMG_PATH = '../graphics/environment/ground.png'
 OBSTACLE_IMG_PATH = '../graphics/obstacles/{}.png'
