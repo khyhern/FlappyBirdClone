@@ -165,6 +165,7 @@ class Game:
                         self.plane.jump()
                     else:
                         if self.main_menu_button.check_for_input(mouse_pos):
+                            self.music.stop()
                             main_menu()
                         else:
                             self.reset_game()
