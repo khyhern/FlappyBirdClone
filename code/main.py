@@ -3,6 +3,7 @@ import sys
 from functools import lru_cache
 from button import Button
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT
+from options import options_menu
 
 # --- Initialize ---
 pygame.init()
@@ -83,7 +84,7 @@ def placeholder_level(message):
     render_back_screen(BLACK, message)
 
 def options():
-    render_back_screen("white", "This is the OPTIONS screen.", "Black")
+    options_menu(screen, get_font)
 
 # --- Level launcher ---
 def launch_level(level_number):

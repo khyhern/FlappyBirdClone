@@ -1,6 +1,7 @@
 import pygame
 import sys
 import time
+import settings
 from random import randint
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FRAMERATE
 from sprites import BG, Ground, Plane, Obstacle
@@ -52,6 +53,7 @@ class Game:
 
         # Music
         self.music = pygame.mixer.Sound("../sounds/music.wav")
+        self.music.set_volume(settings.BGM_VOLUME)  # use settings value
         self.music.play(loops=-1)
 
         # Effects
@@ -150,6 +152,8 @@ class Game:
         last_time = time.time()
 
         while True:
+            self.music.set_volume(settings.BGM_VOLUME)
+
             dt = time.time() - last_time
             last_time = time.time()
 

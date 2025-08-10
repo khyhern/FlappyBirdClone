@@ -1,4 +1,5 @@
 import pygame
+import settings
 from settings import (
     WINDOW_HEIGHT, WINDOW_WIDTH,
     BG_SCROLL_SPEED, GROUND_SCROLL_SPEED, OBSTACLE_SCROLL_SPEED,
@@ -71,7 +72,7 @@ class Plane(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
         self.jump_sound = pygame.mixer.Sound(JUMP_SOUND_PATH)
-        self.jump_sound.set_volume(0.3)
+        self.jump_sound.set_volume(settings.SFX_VOLUME)
 
         self.flip_gravity(False)
 
@@ -90,6 +91,7 @@ class Plane(pygame.sprite.Sprite):
         self.rect.y = int(self.pos.y)
 
     def jump(self):
+        self.jump_sound.set_volume(settings.SFX_VOLUME)
         self.jump_sound.play()
         self.direction = JUMP_FORCE if self.gravity > 0 else -JUMP_FORCE
 

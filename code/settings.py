@@ -16,3 +16,7 @@ BG_IMG_PATH = '../graphics/environment/background.png'
 GROUND_IMG_PATH = '../graphics/environment/ground.png'
 OBSTACLE_IMG_PATH = '../graphics/obstacles/{}.png'
 JUMP_SOUND_PATH = '../sounds/jump.wav'
+
+# Volume controls
+BGM_VOLUME = 1.0
+SFX_VOLUME = 1.0
