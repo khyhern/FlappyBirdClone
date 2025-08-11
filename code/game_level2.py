@@ -68,8 +68,8 @@ class Crow(pygame.sprite.Sprite):
             self.kill()
 
     def draw(self, surface):
-        max_alpha = 180  # less than full opacity
-        min_alpha = 0  # completely invisible at the end
+        max_alpha = 180  # Start of trail visibility
+        min_alpha = 0  # End of trail visibility
         fade_range = max_alpha - min_alpha
 
         # Draw old positions first (faded)
@@ -196,9 +196,22 @@ class Game:
                     Obstacle(self.all_sprites, self.collision_sprites, self.obstacles,
                              scale_factor=self.scale_factor * 1.1)
 
+
                 elif event.type == self.crow_timer and self.active:
-                    y = random.randint(WINDOW_HEIGHT // 5, WINDOW_HEIGHT * 2 // 3)
-                    Crow(self.all_sprites, self.obstacles, pos=(WINDOW_WIDTH, y), scale_factor=self.scale_factor / 1.5)
+                    if random.random() < 0.2:  # 20% chance for 2 crows
+                        min_distance = 180
+                        y1 = random.randint(WINDOW_HEIGHT // 5, WINDOW_HEIGHT * 2 // 3)
+
+                        while True:
+                            y2 = random.randint(WINDOW_HEIGHT // 5, WINDOW_HEIGHT * 2 // 3)
+                            if abs(y2 - y1) >= min_distance:
+                                break
+                        Crow(self.all_sprites, self.obstacles, pos=(WINDOW_WIDTH, y1), scale_factor=self.scale_factor / 1.5)
+                        Crow(self.all_sprites, self.obstacles, pos=(WINDOW_WIDTH, y2), scale_factor=self.scale_factor / 1.5)
+
+                    else:  # 80% chance for 1 crow
+                        y = random.randint(WINDOW_HEIGHT // 5, WINDOW_HEIGHT * 2 // 3)
+                        Crow(self.all_sprites, self.obstacles, pos=(WINDOW_WIDTH, y), scale_factor=self.scale_factor / 1.5)
 
             # Draw
             self.display_surface.fill("black")
