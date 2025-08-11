@@ -41,10 +41,6 @@ class Crow(pygame.sprite.Sprite):
         # Store old positions for ghost trail effect
         self.trail = []
 
-        # Label
-        self.font = pygame.font.Font("../graphics/font/BD_Cartoon_Shout.ttf", 20)
-        self.label_surface = self.font.render("Crow", True, "white")
-
     def animate(self, dt):
         self.timer += self.animation_speed * dt
         if self.timer >= 1:
@@ -250,7 +246,7 @@ class Game:
                             self.reset_game()
 
                 elif event.type == self.obstacle_timer and self.active:
-                    if random.random() < 0.2:
+                    if random.random() < 0.2:   # chance for DoubleObstacle spawn
                         # Spawn double obstacle
                         DoubleObstacle(self.all_sprites, self.collision_sprites, self.obstacles,
                                        scale_factor=self.scale_factor * 0.8)
