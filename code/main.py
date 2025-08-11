@@ -90,10 +90,12 @@ def options():
 def launch_level(level_number):
     level_messages = {
         1: "Level 1 Coming Soon!",
-        2: "Level 2 Coming Soon!"
     }
     if level_number in level_messages:
         placeholder_level(level_messages[level_number])
+    elif level_number == 2:
+        from game_level2 import Game
+        Game().run()
     elif level_number == 3:
         from game_level3 import Game
         Game().run()
