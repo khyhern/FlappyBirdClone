@@ -164,7 +164,7 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
-                elif event.type == pygame.MOUSEBUTTONDOWN:
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.active:
                         self.plane.jump()
                     else:

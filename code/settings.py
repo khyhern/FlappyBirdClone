@@ -18,5 +18,5 @@ OBSTACLE_IMG_PATH = '../graphics/obstacles/{}.png'
 JUMP_SOUND_PATH = '../sounds/jump.wav'
 
 # Volume controls
-BGM_VOLUME = 1.0
-SFX_VOLUME = 1.0
+BGM_VOLUME = 0.5
+SFX_VOLUME = 0.25

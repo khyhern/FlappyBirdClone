@@ -129,7 +129,7 @@ def play():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for button, action in level_buttons:
                     if button.check_for_input(mouse_pos):
                         if action == "back":
@@ -164,7 +164,7 @@ def main_menu():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if buttons[0].check_for_input(mouse_pos):
                     play()
                 elif buttons[1].check_for_input(mouse_pos):
