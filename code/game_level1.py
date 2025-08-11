@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 from settings import *
-from code.spritesLevelOne import BG, Ground, Pony, Obstacle
+from spritesLevelOne import BG, Ground, Pony, Obstacle
 
 class Game:
     def __init__(self):
