@@ -1,4 +1,3 @@
-# options.py
 import pygame
 import sys
 import settings
