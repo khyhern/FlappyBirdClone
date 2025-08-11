@@ -2,6 +2,7 @@ import pygame
 import sys
 import time
 import random
+import math
 import settings
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FRAMERATE
 from sprites import BG, Ground, Plane, Obstacle
@@ -112,7 +113,7 @@ class CustomObstacle(pygame.sprite.Sprite):
             self.kill()
 
 class DoubleObstacle:
-    def __init__(self, all_sprites, collision_sprites, obstacles, scale_factor=0.6, gap_size=250):
+    def __init__(self, all_sprites, collision_sprites, obstacles, scale_factor=0.4, gap_size=250):
         x = settings.WINDOW_WIDTH + 60
 
         offset = -50  # tweak this to taste
@@ -122,6 +123,21 @@ class DoubleObstacle:
 
         CustomObstacle([all_sprites, collision_sprites, obstacles], scale_factor, flipped=False, x_pos=x, y_pos=bottom_y)
         CustomObstacle([all_sprites, collision_sprites, obstacles], scale_factor, flipped=True, x_pos=x, y_pos=top_y)
+
+
+class MovingObstacle(CustomObstacle):
+    def __init__(self, groups, scale_factor, flipped, x_pos, y_pos, amplitude=20, speed=2):
+        super().__init__(groups, scale_factor, flipped, x_pos, y_pos)
+        self.start_y = y_pos
+        self.amplitude = amplitude
+        self.speed = speed
+        self.time = 0
+
+    def update(self, dt):
+        super().update(dt)
+        self.time += dt
+        # Move vertically in sine wave pattern
+        self.rect.y = self.start_y + self.amplitude * math.sin(self.speed * self.time)
 
 
 class Game:
@@ -233,14 +249,34 @@ class Game:
                         else:
                             self.reset_game()
 
-
                 elif event.type == self.obstacle_timer and self.active:
-                    if random.random() < 0.2:               #<-- DoubleObstacle spawn chance (20%)
+                    if random.random() < 0.2:
+                        # Spawn double obstacle
                         DoubleObstacle(self.all_sprites, self.collision_sprites, self.obstacles,
-                                       scale_factor=self.scale_factor * .8)        #<--DoubleObs sprite size
+                                       scale_factor=self.scale_factor * 0.8)
+                    elif random.random() < 0.4:  # chance for moving obstacle spawn
+                        x_pos = WINDOW_WIDTH + 60
+                        y = -80
+                        flipped = random.choice([True, False])
+
+                        if flipped:
+                            y_pos = y  # near top of screen for flipped obstacle
+                        else:
+                            y_pos = WINDOW_HEIGHT - y  # near bottom for normal obstacle
+
+                        MovingObstacle(
+                            [self.all_sprites, self.collision_sprites, self.obstacles],
+                            scale_factor=self.scale_factor * 1.1,
+                            flipped=flipped,
+                            x_pos=x_pos,
+                            y_pos=y_pos,
+                            amplitude=70,
+                            speed=3
+                        )
                     else:
                         Obstacle(self.all_sprites, self.collision_sprites, self.obstacles,
                                  scale_factor=self.scale_factor * 1.1)
+
 
                 elif event.type == self.crow_timer and self.active:
                     if random.random() < 0.2:  # 20% chance for 2 crows
