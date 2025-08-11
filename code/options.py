@@ -2,6 +2,7 @@
 import pygame
 import sys
 import settings
+import time
 from button import Button
 
 pygame.init()
@@ -69,6 +70,9 @@ def options_menu(screen, get_font):
     except Exception:
         preview_sfx = None
 
+    last_sfx_play_time = 0
+    sfx_cooldown = 0.5  # in seconds    <-- SFX interval
+
     running = True
     while running:
         screen.blit(bg, bg_rect.topleft)
@@ -83,6 +87,8 @@ def options_menu(screen, get_font):
 
         back_btn.change_color(mouse_pos)
         back_btn.update(screen)
+
+        current_time = time.time()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -103,13 +109,17 @@ def options_menu(screen, get_font):
         # update preview volume live
         if preview_bgm:
             preview_bgm.set_volume(settings.BGM_VOLUME)
+
+        # play sfx only if dragging AND cooldown passed
         if preview_sfx and sfx_slider.dragging:
-            preview_sfx.set_volume(settings.SFX_VOLUME)
-            preview_sfx.play()
+            if current_time - last_sfx_play_time > sfx_cooldown:
+                preview_sfx.set_volume(settings.SFX_VOLUME)
+                preview_sfx.play()
+                last_sfx_play_time = current_time
 
         pygame.display.update()
         clock.tick(60)
 
-    # previews sounds 
+    # previews sounds
     if preview_bgm:
         preview_bgm.stop()
