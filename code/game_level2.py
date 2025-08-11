@@ -83,6 +83,47 @@ class Crow(pygame.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 
+class CustomObstacle(pygame.sprite.Sprite):
+    def __init__(self, groups, scale_factor, flipped, x_pos, y_pos, offset=0):
+        super().__init__(groups)
+
+        sprite_index = 0  # or random if you want variation
+        surf = pygame.image.load(settings.OBSTACLE_IMG_PATH.format(sprite_index)).convert_alpha()
+
+        if flipped:
+            surf = pygame.transform.flip(surf, False, True)
+
+        self.image = pygame.transform.scale(
+            surf,
+            pygame.math.Vector2(surf.get_size()) * scale_factor
+        )
+
+        if flipped:
+            self.rect = self.image.get_rect(midtop=(x_pos, y_pos + offset))
+        else:
+            self.rect = self.image.get_rect(midbottom=(x_pos, y_pos - offset))
+        self.pos = pygame.math.Vector2(self.rect.topleft)
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self, dt):
+        self.pos.x -= settings.OBSTACLE_SCROLL_SPEED * dt
+        self.rect.x = int(self.pos.x)
+        if self.rect.right < -100:
+            self.kill()
+
+class DoubleObstacle:
+    def __init__(self, all_sprites, collision_sprites, obstacles, scale_factor=0.6, gap_size=250):
+        x = settings.WINDOW_WIDTH + 60
+
+        offset = -50  # tweak this to taste
+
+        top_y = 0 + offset  # push top one down by offset
+        bottom_y = WINDOW_HEIGHT - offset  # push bottom one up by offset
+
+        CustomObstacle([all_sprites, collision_sprites, obstacles], scale_factor, flipped=False, x_pos=x, y_pos=bottom_y)
+        CustomObstacle([all_sprites, collision_sprites, obstacles], scale_factor, flipped=True, x_pos=x, y_pos=top_y)
+
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -192,10 +233,14 @@ class Game:
                         else:
                             self.reset_game()
 
-                elif event.type == self.obstacle_timer and self.active:
-                    Obstacle(self.all_sprites, self.collision_sprites, self.obstacles,
-                             scale_factor=self.scale_factor * 1.1)
 
+                elif event.type == self.obstacle_timer and self.active:
+                    if random.random() < 0.2:               #<-- DoubleObstacle spawn chance (20%)
+                        DoubleObstacle(self.all_sprites, self.collision_sprites, self.obstacles,
+                                       scale_factor=self.scale_factor * .8)        #<--DoubleObs sprite size
+                    else:
+                        Obstacle(self.all_sprites, self.collision_sprites, self.obstacles,
+                                 scale_factor=self.scale_factor * 1.1)
 
                 elif event.type == self.crow_timer and self.active:
                     if random.random() < 0.2:  # 20% chance for 2 crows
