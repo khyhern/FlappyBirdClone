@@ -92,7 +92,8 @@ def launch_level(level_number):
         1: "Level 1 Coming Soon!",
     }
     if level_number in level_messages:
-        placeholder_level(level_messages[level_number])
+        from game_level1 import Game
+        Game().run()
     elif level_number == 2:
         from game_level2 import Game
         Game().run()
